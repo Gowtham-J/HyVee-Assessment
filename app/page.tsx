@@ -1,113 +1,182 @@
-import Image from "next/image";
+/* eslint-disable react/no-unescaped-entities */
+"use client";
+
+import {
+  AgeResponse,
+  CountryResponse,
+  GenderResponse,
+  UserData,
+} from "@/interface";
+import { getCountryName } from "@/utils/getCountryName";
+import { useState } from "react";
 
 export default function Home() {
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState<string>("");
+  const [data, setData] = useState<UserData | null>(null);
+  const [error, setError] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!name) {
+      setError(true);
+      return;
+    }
+    try {
+      setLoading(true);
+      const ageResponse = await fetch(`https://api.agify.io?name=${name}`);
+      if (!ageResponse.ok) throw new Error("Failed to fetch age data");
+      const ageData: AgeResponse = await ageResponse.json();
+
+      const genderResponse = await fetch(
+        `https://api.genderize.io?name=${name}`
+      );
+      if (!genderResponse.ok) throw new Error("Failed to fetch gender data");
+      const genderData: GenderResponse = await genderResponse.json();
+
+      const countryResponse = await fetch(
+        `https://api.nationalize.io?name=${name}`
+      );
+      if (!countryResponse.ok) throw new Error("Failed to fetch country data");
+      const countryData: CountryResponse = await countryResponse.json();
+
+      const countryName =
+        countryData.country.length > 0
+          ? getCountryName(countryData.country[0]?.country_id) || "Unknown"
+          : "Unknown";
+
+      setTimeout(() => {
+        setLoading(false);
+        setData({
+          age: ageData.age,
+          gender: genderData?.gender || "Unknown",
+          country: countryName,
+        });
+      }, 1000);
+    } catch (err) {
+      setTimeout(() => {
+        setLoading(false);
+        setError(true);
+        setData({
+          age: "Unknown",
+          gender: "Unknown",
+          country: "Unknown",
+        });
+      }, 1000);
+    }
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className="font-mono bg-gray-400 min-h-screen flex items-center justify-center">
+      <div className="container mx-auto">
+        <div
+          className="flex justify-center px-6 my-12"
+          style={{ minHeight: "30rem" }}
+        >
+          <div className="w-full xl:w-3/4 lg:w-11/12 flex">
+            <div
+              className="w-full h-auto bg-gray-400 hidden lg:block lg:w-1/2 bg-cover rounded-l-lg"
+              style={{
+                backgroundImage:
+                  "url('https://source.unsplash.com/oWTW-jNGl9I/600x800')",
+              }}
+            ></div>
+            <div className="w-full lg:w-1/2 bg-white p-5 rounded-lg lg:rounded-l-none">
+              {!data ? (
+                <div>
+                  <div className="px-8 mb-4 text-center">
+                    <h3 className="pt-4 mb-2 text-2xl">What's your name?</h3>
+                    <p className="mb-4 text-sm text-gray-700">
+                      Give us your name so we can play detective and figure out
+                      your age, gender, and country. Who needs privacy anyway?
+                    </p>
+                  </div>
+                  <form
+                    className="px-8 pt-6 pb-8 mb-4 bg-white rounded"
+                    onSubmit={handleSubmit}
+                  >
+                    <div className="mb-4">
+                      <label
+                        className="block mb-2 text-sm font-bold text-gray-700"
+                        htmlFor="email"
+                      >
+                        Name
+                      </label>
+                      <input
+                        className="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
+                        id="name"
+                        type="text"
+                        placeholder="Enter Your Name..."
+                        value={name}
+                        required
+                        onChange={(e) => setName(e.target.value)}
+                      />
+                    </div>
+                    <div className="mb-6 text-center">
+                      <button
+                        className="w-full px-4 py-2 font-bold text-white bg-red-500 rounded-full hover:bg-red-700 focus:outline-none focus:shadow-outline"
+                        type="submit"
+                        disabled={loading}
+                      >
+                        {loading ? "..." : "Submit"}
+                      </button>
+                    </div>
+                    <hr className="mb-6 border-t" />
+                    <p className="mb-4 text-sm text-gray-700 text-center">
+                      Buckle Up!!!
+                    </p>
+                  </form>
+                </div>
+              ) : (
+                <div>
+                  <div className="px-8 mb-4 text-center">
+                    <h3 className="pt-4 mb-2 text-2xl">
+                      Hi {name[0].toUpperCase() + name.slice(1)}
+                    </h3>
+                    <p className="mb-2 text-sm text-gray-700">
+                      Age: {data.age}
+                    </p>
+                    <p className="mb-2 text-sm text-gray-700">
+                      Gender: {data.gender}
+                    </p>
+                    <p className="mb-2 text-sm text-gray-700">
+                      Country: {data.country}
+                    </p>
+                  </div>
+                  <div className="mb-6 text-center">
+                    <button
+                      className="w-full mt-8 px-4 py-2 font-bold text-white bg-red-500 rounded-full hover:bg-red-700 focus:outline-none focus:shadow-outline"
+                      type="button"
+                      onClick={() => {
+                        setData(null);
+                        setName("");
+                      }}
+                    >
+                      Reset
+                    </button>
+                  </div>
+                  <hr className="mb-6 border-t" />
+                  <div className="px-8 pt-6 pb-8 mb-4">
+                    {error ? (
+                      <p className="mb-4 text-sm text-gray-700 text-center">
+                        We're sorry, but our server just took a coffee break
+                        instead of doing its job. We'll send it a
+                        strongly-worded memo.
+                      </p>
+                    ) : (
+                      <p className="mb-4 text-sm text-gray-700 text-center">
+                        Congratulations, Sherlock! We've got the scoop on your
+                        age, gender, and country. Now, let's solve the mystery
+                        of what you'll have for dinner tonight.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </div>
   );
 }
