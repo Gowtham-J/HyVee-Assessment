@@ -87,7 +87,6 @@ export default function Home() {
               {!data ? (
                 <div>
                   <div className="px-8 mb-4 text-center">
-                    <h4>helooooo</h4>
                     <h3 className="pt-4 mb-2 text-2xl">What's your name?</h3>
                     <p className="mb-4 text-sm text-gray-700">
                       Give us your name so we can play detective and figure out
