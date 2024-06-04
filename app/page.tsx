@@ -48,6 +48,7 @@ export default function Home() {
       setTimeout(() => {
         setLoading(false);
         setData({
+          name,
           age: ageData.age,
           gender: genderData?.gender || "Unknown",
           country: countryName,
@@ -58,6 +59,7 @@ export default function Home() {
         setLoading(false);
         setError(true);
         setData({
+          name,
           age: "Unknown",
           gender: "Unknown",
           country: "Unknown",
@@ -131,7 +133,7 @@ export default function Home() {
                 <div>
                   <div className="px-8 mb-4 text-center">
                     <h3 className="pt-4 mb-2 text-2xl">
-                      Hi {name[0].toUpperCase() + name.slice(1)}
+                      Hi {data.name[0].toUpperCase() + name.slice(1)}
                     </h3>
                     <p className="mb-2 text-sm text-gray-700">
                       Age: {data.age}

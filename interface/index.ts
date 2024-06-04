@@ -1,4 +1,5 @@
 export interface UserData {
+  name: string;
   age: number | string;
   gender: string;
   country: string;
